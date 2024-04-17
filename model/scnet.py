@@ -278,6 +278,7 @@ class SCNet(nn.Module):
         self.dims = dims
         self.band_configs = band_configs
         self.hop_length = hop_size
+        self.win_length = win_size
         self.conv_config = {
             'compress': compress,
             'kernel': conv_kernel,
@@ -328,8 +329,8 @@ class SCNet(nn.Module):
         B = x.shape[0]
         # In the initial padding, ensure that the number of frames after the STFT (the length of the T dimension) is even,
         # so that the RFFT operation can be used in the separation network.
-        padding = self.hop_length - x.shape[-1] % self.hop_length
-        if (x.shape[-1] + padding) // self.hop_length % 2 == 0:
+        padding = self.hop_length - (x.shape[-1] - self.win_length) % self.hop_length
+        if (x.shape[-1] + padding - self.win_length) // self.hop_length % 2 == 0:
             padding += self.hop_length
         x = F.pad(x, (0, padding))
   
@@ -352,15 +353,15 @@ class SCNet(nn.Module):
             save_lengths.append(lengths)
             save_original_lengths.append(original_lengths)
 
-        #separation
+        # separation
         x = self.separation_net(x)
 
-        #decoder
+        # decoder
         for fusion_layer, su_layer in self.decoder:
             x = fusion_layer(x, save_skip.pop())
             x = su_layer(x, save_lengths.pop(), save_original_lengths.pop())
 
-        #output
+        # output
         n = self.dims[0]
         x = x.view(B, n, -1, Fr, T)   
         x = x.reshape(-1, 2, Fr, T).permute(0, 2, 3, 1)
