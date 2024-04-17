@@ -254,7 +254,7 @@ class SCNet(nn.Module):
                  normalized = True,
                  # SD/SU layer
                  band_configs = {
-                    'low': { 'SR': .175, 'stride': 1, 'kernel': 3 },
+                    'low': { 'SR': .175, 'stride': 1, 'kernel': 3 },   #SR=[.225, .372, .403] in SCNet-large
                     'mid': { 'SR': .392, 'stride': 4, 'kernel': 4 },
                     'high': {'SR': .433, 'stride': 16, 'kernel': 16 }
                  },                      
